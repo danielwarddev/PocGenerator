@@ -6,7 +6,7 @@
 > [!NOTE]
 > This app works, but is very much a work in progress. See the [Future Work](Future%20work/FEATURE-IDEAS.md) folder for my planned features and ideas.
 
-A console app that takes a SaaS idea and generates a runnable MVP using the GitHub Copilot SDK. It typically takes around 30-90 minutes to run and uses a maximum of 12 premium requests (x the multiplier for the model used).
+A .NET console app that takes an app idea and generates a runnable proof-of-concept (POC) of it using the GitHub Copilot SDK. It typically takes around 30-90 minutes to run and uses a maximum of 12 premium requests (x the multiplier for the model used).
 
 ## Running the app
 
@@ -14,7 +14,7 @@ To run, put your app description at `PocGenerator/mvp-definition/mvp.md` (with a
 
 ## Output
 
-The app will produce a new C# solution inside the mvp-outputs directory. Inside that directory, aside from the project itself, you will find a few other files:
+The app will produce a new C# solution inside the `PocGenerator/mvp-outputs/mvp.md` directory. Inside that directory, aside from the project itself, you will find a few other files:
 
 | File / Folder | Description |
 |---|---|
