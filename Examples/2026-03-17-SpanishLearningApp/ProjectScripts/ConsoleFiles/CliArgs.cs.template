@@ -1,0 +1,9 @@
+using CommandLine;
+
+namespace %NAMESPACE%;
+
+public class CliArgs
+{
+    [Option("example", Default = "default_value")]
+    public string Example { get; init; } = "default_value";
+}

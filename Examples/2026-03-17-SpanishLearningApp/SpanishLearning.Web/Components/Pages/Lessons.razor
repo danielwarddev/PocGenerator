@@ -1,0 +1,40 @@
+@page "/lessons"
+@using SpanishLearning.Core.Models
+@using SpanishLearning.Core.Services
+@inject LessonService LessonService
+@inject ProgressService ProgressService
+@rendermode InteractiveServer
+
+<PageTitle>Lessons</PageTitle>
+
+<h1>Spanish Lessons</h1>
+<p class="text-muted">Learn Spanish grammar and vocabulary through structured lessons.</p>
+
+<ul class="list-group" style="max-width:600px;">
+    @foreach (var lesson in _lessons)
+    {
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <a href="/lessons/@lesson.Id">@lesson.Title</a>
+            @if (_completedIds.Contains(lesson.Id))
+            {
+                <span class="badge bg-success">✓ Complete</span>
+            }
+        </li>
+    }
+</ul>
+
+@code {
+    private IReadOnlyList<Lesson> _lessons = [];
+    private HashSet<int> _completedIds = [];
+
+    protected override void OnInitialized()
+    {
+        _lessons = LessonService.GetAll();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var progress = await ProgressService.GetProgress();
+        _completedIds = progress.LessonsCompleted;
+    }
+}

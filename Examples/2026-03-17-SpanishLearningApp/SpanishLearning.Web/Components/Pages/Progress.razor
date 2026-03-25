@@ -1,0 +1,88 @@
+@page "/progress"
+@using SpanishLearning.Core.Models
+@using SpanishLearning.Core.Services
+@inject ProgressService ProgressService
+@inject LessonService LessonService
+@rendermode InteractiveServer
+
+<PageTitle>My Progress</PageTitle>
+
+<h1>My Progress</h1>
+<p class="text-muted">Track your completed lessons and quiz scores.</p>
+
+@if (_loaded)
+{
+    @if (!_hasProgress)
+    {
+        <div class="alert alert-info mt-4">
+            No progress yet — start learning!
+        </div>
+    }
+    else
+    {
+        <div class="mb-4">
+            <h4>Lessons Completed: @_completedLessons.Count / @_allLessons.Count</h4>
+            @if (_completedLessons.Count > 0)
+            {
+                <ul class="list-group mt-2" style="max-width:500px;">
+                    @foreach (var lesson in _completedLessons)
+                    {
+                        <li class="list-group-item">
+                            <span class="badge bg-success me-2">✓</span>@lesson.Title
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+
+        <div class="mb-4">
+            <h4>Quiz History</h4>
+            @if (_progress!.QuizScores.Count == 0)
+            {
+                <p class="text-muted">No quiz attempts yet.</p>
+            }
+            else
+            {
+                <table class="table table-sm" style="max-width:500px;">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var quiz in _progress.QuizScores)
+                        {
+                            <tr>
+                                <td>@quiz.TakenAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>@quiz.Score / @quiz.TotalQuestions</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+}
+
+@code {
+    private ProgressRecord? _progress;
+    private IReadOnlyList<Lesson> _allLessons = [];
+    private List<Lesson> _completedLessons = [];
+    private bool _loaded = false;
+    private bool _hasProgress => _completedLessons.Count > 0 || (_progress?.QuizScores.Count > 0);
+
+    protected override void OnInitialized()
+    {
+        _allLessons = LessonService.GetAll();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _progress = await ProgressService.GetProgress();
+        _completedLessons = _allLessons
+            .Where(l => _progress.LessonsCompleted.Contains(l.Id))
+            .ToList();
+        _loaded = true;
+    }
+}

@@ -1,0 +1,98 @@
+@page "/flashcards"
+@using SpanishLearning.Core.Models
+@using SpanishLearning.Core.Services
+@inject FlashcardService FlashcardService
+@rendermode InteractiveServer
+
+<PageTitle>Flashcards</PageTitle>
+
+<h1>Flashcards</h1>
+
+<div class="mb-3">
+    <label for="categoryFilter" class="form-label">Category</label>
+    <select id="categoryFilter" class="form-select" style="max-width:200px" @onchange="OnCategoryChanged">
+        <option value="">All</option>
+        @foreach (var cat in _categories)
+        {
+            <option value="@cat">@System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(cat)</option>
+        }
+    </select>
+</div>
+
+@if (_deck.Count == 0)
+{
+    <p>No flashcards available for this category.</p>
+}
+else
+{
+    <p class="text-muted">Card @(_currentIndex + 1) of @_deck.Count</p>
+
+    <div class="card text-center my-3" style="width:320px; cursor:pointer; min-height:160px;"
+         @onclick="ToggleFlip">
+        <div class="card-body d-flex flex-column align-items-center justify-content-center">
+            @if (!_isFlipped)
+            {
+                <h2 class="card-title">@_deck[_currentIndex].SpanishWord</h2>
+            }
+            else
+            {
+                <h2 class="card-title">@_deck[_currentIndex].EnglishWord</h2>
+                <p class="card-text text-muted">@System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(_deck[_currentIndex].Category)</p>
+            }
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" @onclick="Previous" disabled="@(_currentIndex == 0)">Previous</button>
+        <button class="btn btn-outline-primary" @onclick="Next" disabled="@(_currentIndex == _deck.Count - 1)">Next</button>
+    </div>
+}
+
+@code {
+    private IReadOnlyList<Flashcard> _deck = [];
+    private IReadOnlyList<string> _categories = [];
+    private int _currentIndex;
+    private bool _isFlipped;
+    private string _selectedCategory = "";
+
+    protected override void OnInitialized()
+    {
+        _categories = FlashcardService.GetCategories();
+        LoadDeck();
+    }
+
+    private void LoadDeck()
+    {
+        _deck = string.IsNullOrEmpty(_selectedCategory)
+            ? FlashcardService.GetAll()
+            : FlashcardService.GetByCategory(_selectedCategory);
+        _currentIndex = 0;
+        _isFlipped = false;
+    }
+
+    private void OnCategoryChanged(ChangeEventArgs e)
+    {
+        _selectedCategory = e.Value?.ToString() ?? "";
+        LoadDeck();
+    }
+
+    private void ToggleFlip() => _isFlipped = !_isFlipped;
+
+    private void Previous()
+    {
+        if (_currentIndex > 0)
+        {
+            _currentIndex--;
+            _isFlipped = false;
+        }
+    }
+
+    private void Next()
+    {
+        if (_currentIndex < _deck.Count - 1)
+        {
+            _currentIndex++;
+            _isFlipped = false;
+        }
+    }
+}

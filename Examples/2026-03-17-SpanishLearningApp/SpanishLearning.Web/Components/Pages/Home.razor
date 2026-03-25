@@ -1,0 +1,124 @@
+﻿@page "/"
+@inject ProgressService ProgressService
+@rendermode InteractiveServer
+
+<PageTitle>Home – Spanish Learning</PageTitle>
+
+<h1>Welcome to Spanish Learning</h1>
+<p class="lead">Your all-in-one platform to master Spanish. Pick a feature below to get started.</p>
+
+<div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">🃏 Flashcards</h5>
+                <p class="card-text">Practise vocabulary with interactive flashcards. Flip through Spanish–English word pairs at your own pace.</p>
+            </div>
+            <div class="card-footer">
+                <a href="/flashcards" class="btn btn-primary">Open Flashcards</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">❓ Quiz</h5>
+                <p class="card-text">Test your knowledge with multiple-choice quizzes covering vocabulary and grammar topics.</p>
+            </div>
+            <div class="card-footer">
+                <a href="/quiz" class="btn btn-primary">Take a Quiz</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">📖 Stories</h5>
+                <p class="card-text">Read short Spanish stories graded by difficulty. Hover over words to see translations.</p>
+            </div>
+            <div class="card-footer">
+                <a href="/stories" class="btn btn-primary">Read Stories</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">📚 Lessons</h5>
+                <p class="card-text">Follow structured lessons from beginner to advanced, covering grammar, pronunciation, and more.</p>
+            </div>
+            <div class="card-footer">
+                <a href="/lessons" class="btn btn-primary">Start a Lesson</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">📊 Progress</h5>
+                <p class="card-text">Track lessons completed and review your quiz history to see how far you've come.</p>
+            </div>
+            <div class="card-footer">
+                <a href="/progress" class="btn btn-primary">View Progress</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">🔗 Resources</h5>
+                <p class="card-text">Explore curated external links, books, podcasts, and tools to accelerate your learning.</p>
+            </div>
+            <div class="card-footer">
+                <a href="/resources" class="btn btn-primary">Browse Resources</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">📈 Quick Stats</h5>
+    </div>
+    <div class="card-body">
+        @if (_loading)
+        {
+            <p>Loading stats…</p>
+        }
+        else
+        {
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Lessons completed</dt>
+                <dd class="col-sm-8">@_lessonsCompleted</dd>
+
+                <dt class="col-sm-4">Last quiz score</dt>
+                <dd class="col-sm-8">@_lastQuizScore</dd>
+            </dl>
+        }
+    </div>
+</div>
+
+@code {
+    private bool _loading = true;
+    private int _lessonsCompleted;
+    private string _lastQuizScore = "No attempts yet";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var progress = await ProgressService.GetProgress();
+        _lessonsCompleted = progress.LessonsCompleted.Count;
+
+        if (progress.QuizScores.Count > 0)
+        {
+            var latest = progress.QuizScores[^1];
+            _lastQuizScore = $"{latest.Score} / {latest.TotalQuestions}";
+        }
+
+        _loading = false;
+    }
+}

@@ -1,0 +1,137 @@
+using GitHub.Copilot.SDK;
+using GitHub.Copilot.SDK.Rpc;
+
+namespace %NAMESPACE%;
+
+/// <summary>
+/// Abstraction over <see cref="CopilotClient"/> to enable unit testing and dependency injection.
+/// </summary>
+public interface ICopilotClient : IDisposable, IAsyncDisposable
+{
+    /// <summary>
+    /// Gets the underlying <see cref="ServerRpc"/> instance used for JSON-RPC communication.
+    /// Throws <see cref="ObjectDisposedException"/> if the client has been disposed, or
+    /// <see cref="InvalidOperationException"/> if the client has not been started.
+    /// </summary>
+    ServerRpc Rpc { get; }
+
+    /// <summary>
+    /// Gets the current connection state of the client.
+    /// </summary>
+    ConnectionState State { get; }
+
+    /// <summary>
+    /// Starts the Copilot client, establishing a connection to the CLI server.
+    /// If the client is already started, the existing connection task is returned.
+    /// </summary>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    Task StartAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gracefully stops the client by disposing all active sessions, then tearing down the connection.
+    /// </summary>
+    Task StopAsync();
+
+    /// <summary>
+    /// Immediately stops the client by clearing sessions and tearing down the connection
+    /// without waiting for sessions to finish.
+    /// </summary>
+    Task ForceStopAsync();
+
+    /// <summary>
+    /// Creates a new Copilot session with the specified configuration.
+    /// </summary>
+    /// <param name="config">Optional session configuration including model, tools, hooks, etc.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The newly created <see cref="CopilotSession"/>.</returns>
+    Task<CopilotSession> CreateSessionAsync(SessionConfig? config = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resumes a previously created session by its identifier.
+    /// </summary>
+    /// <param name="sessionId">The identifier of the session to resume.</param>
+    /// <param name="config">Optional configuration for the resumed session.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The resumed <see cref="CopilotSession"/>.</returns>
+    Task<CopilotSession> ResumeSessionAsync(string sessionId, ResumeSessionConfig? config = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends a ping to the CLI server and returns the response.
+    /// </summary>
+    /// <param name="message">An optional message to include in the ping.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The <see cref="PingResponse"/> from the server.</returns>
+    Task<PingResponse> PingAsync(string? message = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the current status of the Copilot CLI server.
+    /// </summary>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The <see cref="GetStatusResponse"/> from the server.</returns>
+    Task<GetStatusResponse> GetStatusAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the current authentication status.
+    /// </summary>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The <see cref="GetAuthStatusResponse"/> from the server.</returns>
+    Task<GetAuthStatusResponse> GetAuthStatusAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Lists the available models. Results are cached after the first call.
+    /// </summary>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>A list of <see cref="ModelInfo"/> objects.</returns>
+    Task<List<ModelInfo>> ListModelsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the identifier of the last session that was created or resumed.
+    /// </summary>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The session identifier, or <see langword="null"/> if none exists.</returns>
+    Task<string?> GetLastSessionIdAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes a session by its identifier.
+    /// </summary>
+    /// <param name="sessionId">The identifier of the session to delete.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    Task DeleteSessionAsync(string sessionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Lists sessions, optionally filtered by the provided criteria.
+    /// </summary>
+    /// <param name="filter">Optional filter to narrow the session list.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>A list of <see cref="SessionMetadata"/> objects.</returns>
+    Task<List<SessionMetadata>> ListSessionsAsync(SessionListFilter? filter = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the identifier of the current foreground session.
+    /// </summary>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The session identifier, or <see langword="null"/> if none is set.</returns>
+    Task<string?> GetForegroundSessionIdAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sets the foreground session to the specified session identifier.
+    /// </summary>
+    /// <param name="sessionId">The identifier of the session to bring to the foreground.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    Task SetForegroundSessionIdAsync(string sessionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Registers a handler that is invoked for all session lifecycle events.
+    /// </summary>
+    /// <param name="handler">The handler to invoke on each lifecycle event.</param>
+    /// <returns>An <see cref="IDisposable"/> that removes the handler when disposed.</returns>
+    IDisposable On(Action<SessionLifecycleEvent> handler);
+
+    /// <summary>
+    /// Registers a handler for session lifecycle events of the specified type.
+    /// </summary>
+    /// <param name="eventType">The event type to listen for.</param>
+    /// <param name="handler">The handler to invoke when the event occurs.</param>
+    /// <returns>An <see cref="IDisposable"/> that removes the handler when disposed.</returns>
+    IDisposable On(string eventType, Action<SessionLifecycleEvent> handler);
+}

@@ -1,0 +1,21 @@
+- change working directory in copilot session if you change from bin/debug etc
+- pass timespan into sendmessage
+- pass session config or something into createsession
+- when we create the initial plan file, maybe can create an empty file programmatically then tell copilot to edit it. just not sure if you get the same results with responding in prompt
+- new spec: start from point of folder if already exists and failed before
+- include project readme to explain 1. what it does 2. technical structure 3. how to use it in an example flow
+- do i really need configs in program.cs or just hardcode them in the classes?
+- move prompts to separate files
+- keep track of # of requests made
+- log copilot's reasoning
+- give it a way to turn on/off or pass in playwright mcp/others
+- add to readme: time taken, current date, # of of copilot requests made
+- use subagents for each spec, with one parent agent. dont run in parallel
+- add context7
+- glossary of terms (in implementation plan? might not need?)
+- powershell script for an api project
+- powershell script to create a CopilotService (WITH FREE MODEL SET) for me to use with ai-powered ideas
+- note in prompt that the blazor template files (counter/weather/layout/etc) may be useful as an example of how to make pages, but they should be deleted once youre done (Just put in verification step?)
+- frequent timeouts on verification step (split into specs? do e2e tests instead?)
+- give it copilot logs sometimes and ask it where improvements can be made
+- work with docker

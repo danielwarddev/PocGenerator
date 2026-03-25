@@ -1,0 +1,85 @@
+using GitHub.Copilot.SDK;
+using Microsoft.Extensions.Logging;
+
+namespace %NAMESPACE%;
+
+public interface ICopilotService
+{
+    Task Initialize(CancellationToken cancellationToken = default);
+    Task<CopilotSession> CreateSession(string? systemPrompt, CancellationToken cancellationToken = default);
+    Task<string> SendMessage(CopilotSession session, string prompt, CancellationToken cancellationToken = default);
+}
+
+public class CopilotService : ICopilotService, IAsyncDisposable, IDisposable
+{
+    private bool _disposed;
+    private readonly ICopilotClient _copilotClient;
+    private readonly ILogger<CopilotService> _logger;
+
+    public CopilotService(ICopilotClient copilotClient, ILogger<CopilotService> logger)
+    {
+        _copilotClient = copilotClient;
+        _logger = logger;
+    }
+
+    public async Task Initialize(CancellationToken cancellationToken)
+    {
+        await _copilotClient.StartAsync(cancellationToken);
+    }
+
+    public async Task<CopilotSession> CreateSession(string? systemPrompt, CancellationToken cancellationToken = default)
+    {
+        var session = await _copilotClient.CreateSessionAsync(new SessionConfig
+        {
+            Model = "gpt-4.1",
+            SessionId = $"generated-poc-{Guid.CreateVersion7()}",
+            OnPermissionRequest = (_, _) =>
+            {
+                return Task.FromResult(new PermissionRequestResult { Kind = "approved" });
+            },
+            SystemMessage = new SystemMessageConfig
+            {
+                Mode = SystemMessageMode.Append,
+                Content = systemPrompt
+            }
+        },
+        cancellationToken);
+
+        return session;
+    }
+
+    public async Task<string> SendMessage(CopilotSession session, string prompt, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(prompt))
+        {
+            throw new ArgumentException("Prompt cannot be null, empty, or whitespace.", nameof(prompt));
+        }
+
+        var messageOptions = new MessageOptions
+        {
+            Prompt = prompt
+        };
+
+        var response = await session.SendAndWaitAsync(messageOptions, TimeSpan.FromMinutes(5), cancellationToken);
+
+        return response?.Data?.Content ?? string.Empty;
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        _copilotClient.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        await _copilotClient.DisposeAsync();
+        GC.SuppressFinalize(this);
+    }
+}

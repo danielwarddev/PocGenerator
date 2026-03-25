@@ -1,0 +1,77 @@
+@page "/stories/{Id:int}"
+@using SpanishLearning.Core.Models
+@using SpanishLearning.Core.Services
+@inject StoryService StoryService
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+@rendermode InteractiveServer
+
+<PageTitle>@(_story?.Title ?? "Story")</PageTitle>
+
+@if (_story is null)
+{
+    <p>Story not found.</p>
+}
+else
+{
+    <h1>@_story.Title</h1>
+
+    <p class="text-muted fst-italic mb-3">Hold <kbd>Space</kbd> to reveal English</p>
+
+    <div class="card p-3" style="max-width:700px; white-space:pre-wrap;">
+        @(_showEnglish ? _story.EnglishText : _story.SpanishText)
+    </div>
+
+    <div class="mt-3">
+        <a href="/stories" class="btn btn-outline-secondary">← Back to Stories</a>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Story? _story;
+    private bool _showEnglish;
+    private IJSObjectReference? _jsModule;
+    private DotNetObjectReference<StoryReader>? _dotNetRef;
+
+    protected override void OnInitialized()
+    {
+        try { _story = StoryService.GetById(Id); }
+        catch (KeyNotFoundException) { _story = null; }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _story is not null)
+        {
+            _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/storyToggle.js");
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await _jsModule.InvokeVoidAsync("registerKeyListeners", _dotNetRef);
+        }
+    }
+
+    [JSInvokable]
+    public void OnKeyDown()
+    {
+        _showEnglish = true;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void OnKeyUp()
+    {
+        _showEnglish = false;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_jsModule is not null)
+        {
+            await _jsModule.InvokeVoidAsync("unregisterKeyListeners");
+            await _jsModule.DisposeAsync();
+        }
+        _dotNetRef?.Dispose();
+    }
+}

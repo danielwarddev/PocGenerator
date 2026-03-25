@@ -1,0 +1,113 @@
+@page "/quiz"
+@using SpanishLearning.Core.Models
+@using SpanishLearning.Core.Services
+@inject QuizService QuizService
+@inject ProgressService ProgressService
+@rendermode InteractiveServer
+
+<PageTitle>Quiz</PageTitle>
+
+<h1>Quiz</h1>
+
+@if (_finished)
+{
+    <div class="text-center my-4">
+        <h2>You scored @_score / @_questions.Count</h2>
+        <button class="btn btn-primary mt-3" @onclick="ResetQuiz">Try Again</button>
+    </div>
+}
+else if (_questions.Count > 0)
+{
+    var question = _questions[_currentIndex];
+
+    <p class="text-muted">Question @(_currentIndex + 1) of @_questions.Count</p>
+
+    <div class="card my-3" style="max-width:600px;">
+        <div class="card-body">
+            <h5 class="card-title mb-4">@question.Prompt</h5>
+
+            <div class="d-flex flex-column gap-2">
+                @for (int i = 0; i < question.Options.Length; i++)
+                {
+                    var optionIndex = i;
+                    var cssClass = GetOptionCss(question, optionIndex);
+                    <button class="btn @cssClass text-start"
+                            disabled="@(_selectedIndex.HasValue)"
+                            @onclick="() => SelectAnswer(optionIndex)">
+                        @question.Options[optionIndex]
+                    </button>
+                }
+            </div>
+
+            @if (_selectedIndex.HasValue)
+            {
+                <div class="mt-3 alert @(_selectedIndex == question.CorrectIndex ? "alert-success" : "alert-danger")">
+                    <strong>@(_selectedIndex == question.CorrectIndex ? "Correct!" : "Incorrect.")</strong>
+                    @question.Explanation
+                </div>
+
+                @if (_currentIndex < _questions.Count - 1)
+                {
+                    <button class="btn btn-primary mt-2" @onclick="NextQuestion">Next</button>
+                }
+                else
+                {
+                    <button class="btn btn-primary mt-2" @onclick="FinishQuiz">Finish</button>
+                }
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private IReadOnlyList<QuizQuestion> _questions = [];
+    private int _currentIndex;
+    private int? _selectedIndex;
+    private int _score;
+    private bool _finished;
+
+    protected override void OnInitialized()
+    {
+        _questions = QuizService.GetShuffled();
+    }
+
+    private string GetOptionCss(QuizQuestion question, int optionIndex)
+    {
+        if (!_selectedIndex.HasValue)
+            return "btn-outline-secondary";
+        if (optionIndex == question.CorrectIndex)
+            return "btn-success";
+        if (optionIndex == _selectedIndex)
+            return "btn-danger";
+        return "btn-outline-secondary";
+    }
+
+    private void SelectAnswer(int optionIndex)
+    {
+        if (_selectedIndex.HasValue) return;
+        _selectedIndex = optionIndex;
+        if (optionIndex == _questions[_currentIndex].CorrectIndex)
+            _score++;
+    }
+
+    private void NextQuestion()
+    {
+        _currentIndex++;
+        _selectedIndex = null;
+    }
+
+    private async Task FinishQuiz()
+    {
+        _finished = true;
+        await ProgressService.RecordQuizScore(new QuizScore(DateTime.UtcNow, _score, _questions.Count));
+    }
+
+    private void ResetQuiz()
+    {
+        _questions = QuizService.GetShuffled();
+        _currentIndex = 0;
+        _selectedIndex = null;
+        _score = 0;
+        _finished = false;
+    }
+}

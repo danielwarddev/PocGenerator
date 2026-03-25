@@ -1,0 +1,49 @@
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+namespace %NAMESPACE%;
+
+public class ConsoleRunner : BackgroundService
+{
+    private readonly IHostApplicationLifetime _hostApplicationLifetime;
+    private readonly ILogger<ConsoleRunner> _logger;
+    private readonly CliArgs _cliArgs;
+
+    public ConsoleRunner(
+        IHostApplicationLifetime hostApplicationLifetime,
+        ILogger<ConsoleRunner> logger,
+        CliArgs cliArgs)
+    {
+        _hostApplicationLifetime = hostApplicationLifetime;
+        _logger = logger;
+        _cliArgs = cliArgs;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        try
+        {
+            // app goes here
+        }
+        catch (Exception ex)
+        when (HandleWithoutLosingLoggingScope(() => _logger.LogCritical(ex, "An unexpected fatal error has occurred.")))
+        {
+            throw;
+        }
+        finally
+        {
+            _hostApplicationLifetime.StopApplication();
+        }
+    }
+
+    private void OnStopping()
+    {
+        _logger.LogTrace("Application stopping");
+    }
+
+    private bool HandleWithoutLosingLoggingScope(Action action)
+    {
+        action();
+        return false;
+    }
+}

@@ -1,0 +1,22 @@
+using CommandLine;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using %NAMESPACE%;
+using Serilog;
+
+await Host.CreateDefaultBuilder(args)
+    .ConfigureServices((context, services) =>
+    {
+        var cliArgs = Parser.Default
+            .ParseArguments<CliArgs>(args)
+            .MapResult(
+                parsed => parsed,
+                _ => new CliArgs());
+
+        services.AddHostedService<ConsoleRunner>();
+        services.AddSingleton(cliArgs);
+    })
+    .UseConsoleLifetime()
+    .UseSerilog()
+    .Build()
+    .RunAsync();

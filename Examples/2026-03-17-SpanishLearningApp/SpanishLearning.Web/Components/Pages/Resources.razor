@@ -1,0 +1,16 @@
+@page "/resources"
+@inject SpanishLearning.Core.Services.ResourceService ResourceService
+@rendermode InteractiveServer
+
+<PageTitle>Resources</PageTitle>
+
+<h1>Learning Resources</h1>
+<p>Supplement your study with these curated external tools and websites.</p>
+
+@foreach (var resource in ResourceService.GetAll())
+{
+    <div class="mb-4">
+        <a href="@resource.Url" target="_blank" rel="noopener noreferrer">@resource.Title</a>
+        <p>@resource.Description</p>
+    </div>
+}

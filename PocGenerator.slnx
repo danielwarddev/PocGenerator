@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/Solution Items/" />
+  <Project Path="PocGenerator.Tests/PocGenerator.Tests.csproj" />
+  <Project Path="PocGenerator/PocGenerator.csproj" />
+</Solution>

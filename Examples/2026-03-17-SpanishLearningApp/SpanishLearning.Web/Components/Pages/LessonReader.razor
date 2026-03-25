@@ -1,0 +1,62 @@
+@page "/lessons/{Id:int}"
+@using SpanishLearning.Core.Models
+@using SpanishLearning.Core.Services
+@inject LessonService LessonService
+@inject ProgressService ProgressService
+@rendermode InteractiveServer
+
+<PageTitle>@(_lesson?.Title ?? "Lesson")</PageTitle>
+
+@if (_lesson is null)
+{
+    <p>Lesson not found.</p>
+}
+else
+{
+    <h1>@_lesson.Title</h1>
+
+    @foreach (var lessonSection in _lesson.Sections)
+    {
+        <div class="mb-4">
+            <h3>@lessonSection.Heading</h3>
+            <p>@lessonSection.Body</p>
+        </div>
+    }
+
+    <div class="mt-4">
+        <button class="btn @(_isComplete ? "btn-success" : "btn-primary")"
+                @onclick="MarkComplete"
+                disabled="@_isComplete">
+            @(_isComplete ? "✓ Completed" : "Mark as Complete")
+        </button>
+    </div>
+
+    <div class="mt-3">
+        <a href="/lessons" class="btn btn-outline-secondary">← Back to Lessons</a>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Lesson? _lesson;
+    private bool _isComplete;
+
+    protected override void OnInitialized()
+    {
+        try { _lesson = LessonService.GetById(Id); }
+        catch (KeyNotFoundException) { _lesson = null; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var progress = await ProgressService.GetProgress();
+        _isComplete = progress.LessonsCompleted.Contains(Id);
+    }
+
+    private async Task MarkComplete()
+    {
+        await ProgressService.RecordLessonComplete(Id);
+        _isComplete = true;
+    }
+}

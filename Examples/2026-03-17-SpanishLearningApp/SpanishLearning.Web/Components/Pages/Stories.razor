@@ -1,0 +1,28 @@
+@page "/stories"
+@using SpanishLearning.Core.Models
+@using SpanishLearning.Core.Services
+@inject StoryService StoryService
+@rendermode InteractiveServer
+
+<PageTitle>Stories</PageTitle>
+
+<h1>Spanish Stories</h1>
+<p class="text-muted">Read short Spanish stories and challenge your comprehension.</p>
+
+<ul class="list-group" style="max-width:600px;">
+    @foreach (var story in _stories)
+    {
+        <li class="list-group-item">
+            <a href="/stories/@story.Id">@story.Title</a>
+        </li>
+    }
+</ul>
+
+@code {
+    private IReadOnlyList<Story> _stories = [];
+
+    protected override void OnInitialized()
+    {
+        _stories = StoryService.GetAll();
+    }
+}

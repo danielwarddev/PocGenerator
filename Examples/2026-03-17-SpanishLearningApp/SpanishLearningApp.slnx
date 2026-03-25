@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SpanishLearning.Core.UnitTests/SpanishLearning.Core.UnitTests.csproj" />
+  <Project Path="SpanishLearning.Core/SpanishLearning.Core.csproj" />
+  <Project Path="SpanishLearning.Web.UnitTests/SpanishLearning.Web.UnitTests.csproj" />
+  <Project Path="SpanishLearning.Web/SpanishLearning.Web.csproj" />
+</Solution>
