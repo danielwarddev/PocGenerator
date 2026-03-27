@@ -45,7 +45,7 @@ public class ConsoleRunner : BackgroundService
 
             var plan = await _planningPhaseHandler.CreatePlan(stoppingToken);
             await _generationPhaseHandler.GenerateMvp(plan.OutputDirectory, plan.SpecFiles, stoppingToken);
-            await _verificationPhaseHandler.VerifyMvp(plan.OutputDirectory, stoppingToken);
+            await _verificationPhaseHandler.VerifyMvp(plan.OutputDirectory, plan.PlanFilePath, stoppingToken);
         }
         catch (Exception ex)
         when (HandleWithoutLosingLoggingScope(() => _logger.LogCritical(ex, "An unexpected fatal error has occurred.")))

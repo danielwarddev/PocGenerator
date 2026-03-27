@@ -6,7 +6,7 @@ namespace PocGenerator.Verification;
 
 public interface IVerificationPhaseHandler
 {
-    Task VerifyMvp(string outputDirectory, CancellationToken cancellationToken = default);
+    Task VerifyMvp(string outputDirectory, string implementationPlanPath, CancellationToken cancellationToken = default);
 }
 
 public class VerificationPhaseHandler : IVerificationPhaseHandler
@@ -28,7 +28,7 @@ public class VerificationPhaseHandler : IVerificationPhaseHandler
         _logger = logger;
     }
 
-    public async Task VerifyMvp(string outputDirectory, CancellationToken cancellationToken)
+    public async Task VerifyMvp(string outputDirectory, string implementationPlanPath, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting MVP verification phase for {OutputDirectory}", outputDirectory);
 
@@ -38,7 +38,7 @@ public class VerificationPhaseHandler : IVerificationPhaseHandler
         await using (var session = await _copilotService.CreateSession(new CreateSessionConfig(systemPrompt, OutputDirectory: outputDirectory), cancellationToken))
         {
             var verificationPrompt = BuildVerificationPrompt(outputDirectory);
-            await _copilotService.SendMessage(new SendMessageConfig(verificationPrompt, session, [ideaFilePath]), cancellationToken);
+            await _copilotService.SendMessage(new SendMessageConfig(verificationPrompt, session, [implementationPlanPath]), cancellationToken);
         }
 
         _logger.LogInformation("MVP verification phase completed. Generating README");
@@ -63,22 +63,23 @@ public class VerificationPhaseHandler : IVerificationPhaseHandler
     }
 
     public const string VerificationPromptTemplate = """
-        You are performing a final verification pass on a fully generated MVP project. The idea/spec file is attached — read it to understand what the application does.
+        You are performing a final verification pass on a fully generated MVP project. The implementation plan is attached — read its **Definition of Done** section to identify all user flows that need e2e test coverage.
 
         WORKING DIRECTORY: {OUTPUT_DIRECTORY}
 
         INSTRUCTIONS:
-        1. Read the attached file to understand the application's purpose and features.
+        1. Read the attached implementation plan's Definition of Done to identify all core user flows.
         2. Run `dotnet build` in the working directory to ensure the solution compiles.
         3. Run `dotnet test` in the working directory to ensure all unit tests pass.
-        4. If the project includes a web application:
-           a. Start it using `dotnet run`
-           b. Use the Playwright MCP browser to test all core user flows from the spec
-           c. Fix any issues that arise
-           d. Re-run `dotnet test` after each fix
-           e. Stop the application when done
-        5. If the project is a console application, run it and verify output matches the spec.
-        6. Do NOT stop until every core user flow works correctly end-to-end and all tests pass.
+        4. Generate e2e test projects to cover all user flows:
+           a. Create a **Playwright e2e test project** for web UI flows (page navigation, form submission, CRUD operations, interactive elements). Use Playwright when the flow involves browser rendering, JS interop, or visual layout.
+           b. Create **HTTP integration tests** (using `WebApplicationFactory`) for API-level flows that don't require a browser. Use HTTP tests for pure API request/response verification.
+           c. Implement each e2e test as a **separate subagent call** to avoid context bloat.
+        5. After generating all tests, run the fix loop:
+           a. Run `dotnet test` in the working directory
+           b. If tests fail, diagnose the failures, fix the code or tests, and re-run `dotnet test`
+           c. Repeat until all tests pass or attempts are exhausted
+        6. Do NOT stop until all generated e2e tests pass along with all unit tests.
         """;
 
     public const string ReadmePromptTemplate = """

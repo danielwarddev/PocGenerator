@@ -31,7 +31,7 @@ public class VerificationPhaseHandlerTests
     [Fact]
     public async Task When_VerifyMvp_Called_Then_Verification_Session_Is_Created_With_Output_Directory()
     {
-        await _sut.VerifyMvp("/output", TestContext.Current.CancellationToken);
+        await _sut.VerifyMvp("/output", "/output/implementation-plan.md", TestContext.Current.CancellationToken);
 
         await _copilotService.Received(1).CreateSession(
             Arg.Is<CreateSessionConfig>(c => 
@@ -43,7 +43,7 @@ public class VerificationPhaseHandlerTests
     [Fact]
     public async Task When_VerifyMvp_Called_Then_Readme_Session_Is_Created_Without_Output_Directory()
     {
-        await _sut.VerifyMvp("/output", TestContext.Current.CancellationToken);
+        await _sut.VerifyMvp("/output", "/output/implementation-plan.md", TestContext.Current.CancellationToken);
 
         await _copilotService.Received(1).CreateSession(
             Arg.Is<CreateSessionConfig>(c => 
@@ -55,7 +55,7 @@ public class VerificationPhaseHandlerTests
     [Fact]
     public async Task When_VerifyMvp_Called_Then_Both_Messages_Contain_Output_Directory()
     {
-        await _sut.VerifyMvp("/my/output/dir", TestContext.Current.CancellationToken);
+        await _sut.VerifyMvp("/my/output/dir", "/my/output/dir/implementation-plan.md", TestContext.Current.CancellationToken);
 
         await _copilotService.Received(2).SendMessage(
             Arg.Is<SendMessageConfig>(c => c.Prompt.Contains("/my/output/dir")),
@@ -63,13 +63,25 @@ public class VerificationPhaseHandlerTests
     }
 
     [Fact]
-    public async Task When_VerifyMvp_Called_Then_Idea_File_Is_Attached_To_Both_Sessions()
+    public async Task When_VerifyMvp_Called_Then_Implementation_Plan_Is_Attached_To_Verification_Session()
+    {
+        await _sut.VerifyMvp("/output", "/output/implementation-plan.md", TestContext.Current.CancellationToken);
+
+        await _copilotService.Received(1).SendMessage(
+            Arg.Is<SendMessageConfig>(c =>
+                c.AttachmentPaths != null &&
+                c.AttachmentPaths.Single() == "/output/implementation-plan.md"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task When_VerifyMvp_Called_Then_Idea_File_Is_Attached_To_Readme_Session()
     {
         _ideaFileLocator.GetIdeaFiles().Returns(new IdeaFiles("/ideas/my-idea.md", []));
 
-        await _sut.VerifyMvp("/output", TestContext.Current.CancellationToken);
+        await _sut.VerifyMvp("/output", "/output/implementation-plan.md", TestContext.Current.CancellationToken);
 
-        await _copilotService.Received(2).SendMessage(
+        await _copilotService.Received(1).SendMessage(
             Arg.Is<SendMessageConfig>(c =>
                 c.AttachmentPaths != null &&
                 c.AttachmentPaths.Single() == "/ideas/my-idea.md"),

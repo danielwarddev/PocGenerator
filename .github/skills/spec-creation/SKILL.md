@@ -9,6 +9,8 @@ description: Guidelines for creating feature specification documents for the Bud
 
 This skill defines how to create feature specification documents for the app. Specs are user-story-driven documents with clear acceptance criteria that tell you when you're done.
 
+Before writing a spec, use the `#askQuestions` tool to ask any clarifying questions necessary to fully understand the feature requirements, scope, and constraints.
+
 ## File Naming & Location
 
 - **Location**: `.github/specs/`

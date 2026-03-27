@@ -3,7 +3,10 @@
 param(
     # Name of the source project to create tests for, e.g. "MyApp.Api"
     [Parameter(Mandatory=$true)]
-    [string]$SourceProjectName
+    [string]$SourceProjectName,
+
+    # When specified, adds the Microsoft.Playwright NuGet package and runs playwright install to download browser binaries
+    [switch]$WithPlaywright
 )
 
 if (-not (Get-ChildItem -Path $PWD -Filter "*.sln*" -File | Select-Object -First 1)) {
@@ -46,6 +49,14 @@ if (Test-Path $unitTest1Path) {
 
 # Rebuild
 dotnet build --no-incremental
+
+if ($WithPlaywright) {
+    Write-Host "=== Adding Playwright support... ==="
+
+    dotnet add $testProjectPath package Microsoft.Playwright
+    dotnet build $testProjectPath
+    pwsh (Join-Path $testProjectPath "bin" "Debug" "net10.0" "playwright.ps1") install
+}
 
 Write-Host "=== Test Project Created Successfully ==="
 Write-Host "Location: $testProjectPath"
