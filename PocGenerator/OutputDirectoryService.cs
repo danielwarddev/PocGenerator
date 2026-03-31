@@ -9,6 +9,7 @@ public interface IOutputDirectoryService
     Task<string> CreateOutputFolder(string slug, CancellationToken cancellationToken = default);
     void CopyProjectScripts(string outputDirectory);
     void CopyDirectoryBuildProps(string outputDirectory);
+    void CopyGitignore(string outputDirectory);
     void CopyMvpDefinition(string outputDirectory, string sourceMvpDefinitionDirectory);
 }
 
@@ -99,6 +100,15 @@ public class OutputDirectoryService : IOutputDirectoryService
 
         var targetPath = _fileSystem.Path.Combine(outputDirectory, "Directory.Build.props");
         _fileSystem.File.Copy(templatePath, targetPath, overwrite: true);
+    }
+
+    public void CopyGitignore(string outputDirectory)
+    {
+        var sourcePath = _fileSystem.Path.Combine(_config.ProjectScriptsSourceDirectory, ".gitignore");
+        if (!_fileSystem.File.Exists(sourcePath)) return;
+
+        var targetPath = _fileSystem.Path.Combine(outputDirectory, ".gitignore");
+        _fileSystem.File.Copy(sourcePath, targetPath, overwrite: true);
     }
 
     public void CopyMvpDefinition(string outputDirectory, string sourceMvpDefinitionDirectory)

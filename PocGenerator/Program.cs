@@ -38,6 +38,7 @@ await Host.CreateDefaultBuilder(args)
         services.AddSingleton<IGenerationPhaseHandler, GenerationPhaseHandler>();
         services.AddSingleton<IVerificationPhaseHandler, VerificationPhaseHandler>();
         services.AddSingleton<IProcessRunner, ProcessRunner>();
+        services.AddSingleton<IGitService, GitService>();
         services.AddSingleton(new OutputDirectoryService.ProjectScriptsConfig(
             Path.Combine(AppContext.BaseDirectory, "ProjectScripts")));
         services.AddSingleton(TimeProvider.System);

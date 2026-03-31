@@ -16,17 +16,20 @@ public class ProjectPlanner : IProjectPlanner
 {
     private readonly ICopilotService _copilotService;
     private readonly IOutputDirectoryService _outputDirectoryService;
+    private readonly IGitService _gitService;
     private readonly IFileSystem _fileSystem;
     private readonly ILogger<ProjectPlanner> _logger;
 
     public ProjectPlanner(
         ICopilotService copilotService,
         IOutputDirectoryService outputDirectoryService,
+        IGitService gitService,
         IFileSystem fileSystem,
         ILogger<ProjectPlanner> logger)
     {
         _copilotService = copilotService;
         _outputDirectoryService = outputDirectoryService;
+        _gitService = gitService;
         _fileSystem = fileSystem;
         _logger = logger;
     }
@@ -36,9 +39,12 @@ public class ProjectPlanner : IProjectPlanner
         var outputDirectory = await _outputDirectoryService.CreateOutputFolder(slug, cancellationToken);
         _outputDirectoryService.CopyProjectScripts(outputDirectory);
         _outputDirectoryService.CopyDirectoryBuildProps(outputDirectory);
+        _outputDirectoryService.CopyGitignore(outputDirectory);
 
         var mvpDefinitionSource = _fileSystem.Path.GetDirectoryName(ideaFiles.IdeaFilePath)!;
         _outputDirectoryService.CopyMvpDefinition(outputDirectory, mvpDefinitionSource);
+
+        await _gitService.Init(outputDirectory, cancellationToken);
 
         var response = await _copilotService.SendMessage(new SendMessageConfig(PlanningPrompt, session, ideaFiles.AllFilePaths()), cancellationToken);
 

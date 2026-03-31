@@ -1,6 +1,6 @@
 # Spec 2: Git Initialization & .gitignore
 
-**Status**: 📋 Not Started
+**Status**: ✅ Complete
 
 ---
 
@@ -16,21 +16,21 @@ Before the pipeline can create checkpoint commits, the output directory needs to
 
 ### .gitignore
 
-- [ ] A `.gitignore` file exists in `ProjectScripts/` covering standard .NET ignores (`bin/`, `obj/`, `*.user`, `.vs/`, etc.)
-- [ ] `OutputDirectoryService` copies the `.gitignore` into the output directory during project creation (alongside existing script/props copies)
+- [x] A `.gitignore` file exists in `ProjectScripts/` covering standard .NET ignores (`bin/`, `obj/`, `*.user`, `.vs/`, etc.)
+- [x] `OutputDirectoryService` copies the `.gitignore` into the output directory during project creation (alongside existing script/props copies)
 
 ### Git Service
 
-- [ ] A new `IGitService` / `GitService` wraps git operations using `IProcessRunner`
-- [ ] `GitService` exposes an `Init` method that runs `git init` and `git branch -M main` in the output directory
-- [ ] `GitService` exposes `AddAll` and `Commit(message)` methods for use by later specs
-- [ ] `GitService` exposes a `GetLog` method that returns the git log (for use by later specs)
-- [ ] `GitService` exposes a `CleanAndRestore` method that runs `git clean -fd` and `git checkout .` (for use by later specs)
+- [x] A new `IGitService` / `GitService` wraps git operations using `IProcessRunner`
+- [x] `GitService` exposes an `Init` method that runs `git init` and `git branch -M main` in the output directory
+- [x] `GitService` exposes `AddAll` and `Commit(message)` methods for use by later specs
+- [x] `GitService` exposes a `GetLog` method that returns the git log (for use by later specs)
+- [x] `GitService` exposes a `CleanAndRestore` method that runs `git clean -fd` and `git checkout .` (for use by later specs)
 
 ### Integration
 
-- [ ] `PlanningPhaseHandler` calls `GitService.Init` after the output directory is created (before planning begins)
-- [ ] All existing tests continue to pass
+- [x] `PlanningPhaseHandler` calls `GitService.Init` after the output directory is created (before planning begins)
+- [x] All existing tests continue to pass
 
 ## Out of Scope
 
@@ -46,8 +46,8 @@ Before the pipeline can create checkpoint commits, the output directory needs to
 
 ## Definition of Done
 
-- [ ] All acceptance criteria are met
-- [ ] Unit tests cover `GitService` operations (init, add, commit, log, clean)
-- [ ] Unit tests cover `.gitignore` copy in `OutputDirectoryService`
-- [ ] Existing tests pass (`dotnet test PocGenerator.Tests`)
-- [ ] Build succeeds (`dotnet build PocGenerator`)
+- [x] All acceptance criteria are met
+- [x] Unit tests cover `GitService` operations (init, add, commit, log, clean)
+- [x] Unit tests cover `.gitignore` copy in `OutputDirectoryService`
+- [x] Existing tests pass (`dotnet test PocGenerator.Tests`)
+- [x] Build succeeds (`dotnet build PocGenerator`)

@@ -114,6 +114,19 @@ public class OutputDirectoryServiceTests
     }
 
     [Fact]
+    public void When_CopyGitignore_Called_Then_Gitignore_Is_Copied_To_Output()
+    {
+        var outputDir = _fileSystem.Path.GetFullPath("/output/test-dir");
+        _fileSystem.AddDirectory(outputDir);
+
+        _sut.CopyGitignore(outputDir);
+
+        var targetPath = _fileSystem.Path.Combine(outputDir, ".gitignore");
+        _fileSystem.File.Exists(targetPath).Should().BeTrue();
+        _fileSystem.File.ReadAllText(targetPath).Should().Contain("bin/");
+    }
+
+    [Fact]
     public void When_ConsoleFiles_Directory_Does_Not_Exist_Then_CopyProjectScripts_Still_Succeeds()
     {
         var fileSystem = new MockFileSystem();
@@ -148,5 +161,8 @@ public class OutputDirectoryServiceTests
         _fileSystem.AddFile(
             _fileSystem.Path.Combine(ScriptsSourceDirectory, "ConsoleFiles", "Program.cs.template"),
             "// program template");
+        _fileSystem.AddFile(
+            _fileSystem.Path.Combine(ScriptsSourceDirectory, ".gitignore"),
+            "bin/\nobj/");
     }
 }

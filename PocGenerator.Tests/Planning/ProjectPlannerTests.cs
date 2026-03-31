@@ -12,6 +12,7 @@ public class ProjectPlannerTests
 {
     private readonly ICopilotService _copilotService = Substitute.For<ICopilotService>();
     private readonly IOutputDirectoryService _outputDirectoryService = Substitute.For<IOutputDirectoryService>();
+    private readonly IGitService _gitService = Substitute.For<IGitService>();
     private readonly MockFileSystem _fileSystem = new();
     private readonly ILogger<ProjectPlanner> _logger = Substitute.For<ILogger<ProjectPlanner>>();
     private readonly CopilotSession _session = null!;
@@ -19,7 +20,7 @@ public class ProjectPlannerTests
 
     public ProjectPlannerTests()
     {
-        _sut = new ProjectPlanner(_copilotService, _outputDirectoryService, _fileSystem, _logger);
+        _sut = new ProjectPlanner(_copilotService, _outputDirectoryService, _gitService, _fileSystem, _logger);
     }
 
     [Fact]
