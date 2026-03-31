@@ -11,6 +11,10 @@ This skill defines how to create feature specification documents for the app. Sp
 
 Before writing a spec, use the `#askQuestions` tool to ask any clarifying questions necessary to fully understand the feature requirements, scope, and constraints.
 
+## Spec Sizing
+
+Each spec must be small enough that a human can **easily manually review** the resulting code changes in a single pass. If a feature would produce too many changes to review comfortably, split it into multiple specs that build on each other sequentially. Prefer more, smaller specs over fewer, larger ones. A good rule of thumb: if the acceptance criteria span more than two or three distinct areas of the codebase (new services, CLI changes, phase handler integration, etc.), that is a signal to split.
+
 ## File Naming & Location
 
 - **Location**: `.github/specs/`
