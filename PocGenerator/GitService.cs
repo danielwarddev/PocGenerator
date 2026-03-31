@@ -36,8 +36,8 @@ public class GitService : IGitService
 
     public async Task<string> GetLog(string workingDirectory, CancellationToken cancellationToken)
     {
-        var result = await _processRunner.RunWithOutput("git", "log --oneline", workingDirectory, cancellationToken);
-        return result.StandardOutput;
+        var result = await _processRunner.RunWithOutput("git", "log -1 --format=%s", workingDirectory, cancellationToken);
+        return result.StandardOutput.Trim();
     }
 
     public async Task CleanAndRestore(string workingDirectory, CancellationToken cancellationToken)

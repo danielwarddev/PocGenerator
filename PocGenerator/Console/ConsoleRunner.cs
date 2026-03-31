@@ -1,9 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PocGenerator.Copilot;
-using PocGenerator.Generation;
-using PocGenerator.Planning;
-using PocGenerator.Verification;
 using System.Diagnostics;
 
 
@@ -13,25 +10,25 @@ public class ConsoleRunner : BackgroundService
 {
     private readonly IHostApplicationLifetime _hostApplicationLifetime;
     private readonly ILogger<ConsoleRunner> _logger;
+    private readonly CliArgs _cliArgs;
     private readonly ICopilotService _copilotService;
-    private readonly IPlanningPhaseHandler _planningPhaseHandler;
-    private readonly IGenerationPhaseHandler _generationPhaseHandler;
-    private readonly IVerificationPhaseHandler _verificationPhaseHandler;
+    private readonly INormalFlowRunner _normalFlowRunner;
+    private readonly IRetryFlowRunner _retryFlowRunner;
 
     public ConsoleRunner(
         IHostApplicationLifetime hostApplicationLifetime,
         ILogger<ConsoleRunner> logger,
+        CliArgs cliArgs,
         ICopilotService copilotService,
-        IPlanningPhaseHandler planningPhaseHandler,
-        IGenerationPhaseHandler generationPhaseHandler,
-        IVerificationPhaseHandler verificationPhaseHandler)
+        INormalFlowRunner normalFlowRunner,
+        IRetryFlowRunner retryFlowRunner)
     {
         _hostApplicationLifetime = hostApplicationLifetime;
         _logger = logger;
+        _cliArgs = cliArgs;
         _copilotService = copilotService;
-        _planningPhaseHandler = planningPhaseHandler;
-        _generationPhaseHandler = generationPhaseHandler;
-        _verificationPhaseHandler = verificationPhaseHandler;
+        _normalFlowRunner = normalFlowRunner;
+        _retryFlowRunner = retryFlowRunner;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,9 +40,14 @@ public class ConsoleRunner : BackgroundService
             _logger.LogInformation("Starting PocGenerator...");
             await _copilotService.Initialize(stoppingToken);
 
-            var plan = await _planningPhaseHandler.CreatePlan(stoppingToken);
-            await _generationPhaseHandler.GenerateMvp(plan.OutputDirectory, plan.SpecFiles, stoppingToken);
-            await _verificationPhaseHandler.VerifyMvp(plan.OutputDirectory, plan.PlanFilePath, stoppingToken);
+            if (_cliArgs.RetryPath is null)
+            {
+                await _normalFlowRunner.Run(stoppingToken);
+            }
+            else
+            {
+                await _retryFlowRunner.Run(_cliArgs.RetryPath, stoppingToken);
+            }
         }
         catch (Exception ex)
         when (HandleWithoutLosingLoggingScope(() => _logger.LogCritical(ex, "An unexpected fatal error has occurred.")))

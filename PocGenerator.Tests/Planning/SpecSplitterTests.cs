@@ -30,7 +30,7 @@ public class SpecSplitterTests
             ("/output/test/specs/spec-01-user-authentication.md", "# User Authentication\n\nHandle login."),
             ("/output/test/specs/spec-02-dashboard-ui.md", "# Dashboard UI\n\nCreate dashboard."));
 
-        var result = await _sut.SplitPlan(plan, TestContext.Current.CancellationToken);
+        var result = await _sut.SplitPlan(_session, plan, TestContext.Current.CancellationToken);
 
         result.Should().Contain(f => f.Contains("spec-01-user-authentication.md"));
         result.Should().Contain(f => f.Contains("spec-02-dashboard-ui.md"));
@@ -46,7 +46,7 @@ public class SpecSplitterTests
             .ToArray();
         SimulateCopilotCreatedSpecs(specFiles);
 
-        var act = () => _sut.SplitPlan(plan, TestContext.Current.CancellationToken);
+        var act = () => _sut.SplitPlan(_session, plan, TestContext.Current.CancellationToken);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*12*exceeds*10*");
@@ -58,7 +58,7 @@ public class SpecSplitterTests
         var plan = SetupPlan();
         SetupCopilotResponse();
 
-        var act = () => _sut.SplitPlan(plan, TestContext.Current.CancellationToken);
+        var act = () => _sut.SplitPlan(_session, plan, TestContext.Current.CancellationToken);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*did not create any spec files*");
@@ -71,7 +71,7 @@ public class SpecSplitterTests
         SetupCopilotResponse();
         SimulateCopilotCreatedSpecs(("/output/test/specs/spec-01-feature.md", "# Feature\n\nContent."));
 
-        await _sut.SplitPlan(plan, TestContext.Current.CancellationToken);
+        await _sut.SplitPlan(_session, plan, TestContext.Current.CancellationToken);
 
         await _copilotService.Received(1).SendMessage(
             Arg.Is<SendMessageConfig>(c =>
@@ -89,7 +89,7 @@ public class SpecSplitterTests
         SetupCopilotResponse();
         SimulateCopilotCreatedSpecs(("/output/test/specs/spec-01-feature.md", "# Feature\n\nContent."));
 
-        await _sut.SplitPlan(plan, TestContext.Current.CancellationToken);
+        await _sut.SplitPlan(_session, plan, TestContext.Current.CancellationToken);
 
         var expectedPath = _fileSystem.Path.Combine("/output/test", "Specs");
         await _copilotService.Received(1).SendMessage(
@@ -106,7 +106,7 @@ public class SpecSplitterTests
         SetupCopilotResponse();
         SimulateCopilotCreatedSpecs(("/output/test/specs/spec-01-feature.md", "# Feature\n\nContent."));
 
-        await _sut.SplitPlan(plan, TestContext.Current.CancellationToken);
+        await _sut.SplitPlan(_session, plan, TestContext.Current.CancellationToken);
 
         await _copilotService.Received(1).SendMessage(
             Arg.Is<SendMessageConfig>(c =>
@@ -122,7 +122,7 @@ public class SpecSplitterTests
         SetupCopilotResponse();
         SimulateCopilotCreatedSpecs(("/output/test/specs/spec-01-feature.md", "# Feature\n\nContent."));
 
-        await _sut.SplitPlan(plan, TestContext.Current.CancellationToken);
+        await _sut.SplitPlan(_session, plan, TestContext.Current.CancellationToken);
 
         await _copilotService.Received(1).SendMessage(
             Arg.Is<SendMessageConfig>(c =>
@@ -141,7 +141,7 @@ public class SpecSplitterTests
             .ToArray();
         SimulateCopilotCreatedSpecs(specFiles);
 
-        var result = await _sut.SplitPlan(plan, TestContext.Current.CancellationToken);
+        var result = await _sut.SplitPlan(_session, plan, TestContext.Current.CancellationToken);
 
         result.Should().HaveCount(10);
     }
@@ -156,7 +156,7 @@ public class SpecSplitterTests
     {
         _fileSystem.AddDirectory("/output/test");
         _fileSystem.AddFile("/output/test/implementation-plan.md", new MockFileData("# My Plan\nSome content"));
-        return new ProjectPlan(_session, "/output/test", "/output/test/implementation-plan.md", []);
+        return new ProjectPlan("/output/test", "/output/test/implementation-plan.md", []);
     }
 
     private void SetupCopilotResponse()

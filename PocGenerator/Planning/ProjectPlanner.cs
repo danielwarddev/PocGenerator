@@ -5,11 +5,15 @@ using PocGenerator.Copilot;
 
 namespace PocGenerator.Planning;
 
-public record ProjectPlan(CopilotSession Session, string OutputDirectory, string PlanFilePath, IReadOnlyList<string> SpecFiles);
+public record ProjectPlan(string OutputDirectory, string PlanFilePath, IReadOnlyList<string> SpecFiles);
 
 public interface IProjectPlanner
 {
-    Task<ProjectPlan> GeneratePlan(CopilotSession session, string slug, IdeaFiles ideaFiles, CancellationToken cancellationToken = default);
+    Task<ProjectPlan> GeneratePlan(
+        CopilotSession session,
+        string slug,
+        IdeaFiles ideaFiles,
+    CancellationToken cancellationToken = default);
 }
 
 public class ProjectPlanner : IProjectPlanner
@@ -34,7 +38,11 @@ public class ProjectPlanner : IProjectPlanner
         _logger = logger;
     }
 
-    public async Task<ProjectPlan> GeneratePlan(CopilotSession session, string slug, IdeaFiles ideaFiles, CancellationToken cancellationToken)
+    public async Task<ProjectPlan> GeneratePlan(
+        CopilotSession session,
+        string slug,
+        IdeaFiles ideaFiles,
+        CancellationToken cancellationToken)
     {
         var outputDirectory = await _outputDirectoryService.CreateOutputFolder(slug, cancellationToken);
         _outputDirectoryService.CopyProjectScripts(outputDirectory);
@@ -51,7 +59,7 @@ public class ProjectPlanner : IProjectPlanner
         var planFilePath = WritePlanDocument(outputDirectory, response);
         _logger.LogInformation("Implementation plan written to: {PlanPath}", planFilePath);
 
-        return new ProjectPlan(session, outputDirectory, planFilePath, []);
+        return new ProjectPlan(outputDirectory, planFilePath, []);
     }
 
     private string WritePlanDocument(string outputDirectory, string planContent)

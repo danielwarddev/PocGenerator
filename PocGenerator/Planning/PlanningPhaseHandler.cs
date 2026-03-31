@@ -56,7 +56,7 @@ public class PlanningPhaseHandler : IPlanningPhaseHandler
         var plan = await _projectPlanner.GeneratePlan(session, slug, ideaFiles, cancellationToken);
         _logger.LogInformation("Planning complete. Plan written to: {PlanFilePath}", plan.PlanFilePath);
 
-        var specFiles = await _specSplitter.SplitPlan(plan, cancellationToken);
+        var specFiles = await _specSplitter.SplitPlan(session, plan, cancellationToken);
         _logger.LogInformation("Spec splitting complete. {SpecCount} specs generated", specFiles.Count);
 
         await _gitService.AddAll(plan.OutputDirectory, cancellationToken);

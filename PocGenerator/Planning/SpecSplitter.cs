@@ -1,4 +1,5 @@
 using System.IO.Abstractions;
+using GitHub.Copilot.SDK;
 using Microsoft.Extensions.Logging;
 using PocGenerator.Copilot;
 
@@ -6,7 +7,7 @@ namespace PocGenerator.Planning;
 
 public interface ISpecSplitter
 {
-    Task<IReadOnlyList<string>> SplitPlan(ProjectPlan plan, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<string>> SplitPlan(CopilotSession session, ProjectPlan plan, CancellationToken cancellationToken = default);
 }
 
 public class SpecSplitter : ISpecSplitter
@@ -24,13 +25,13 @@ public class SpecSplitter : ISpecSplitter
         _logger = logger;
     }
 
-    public async Task<IReadOnlyList<string>> SplitPlan(ProjectPlan plan, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<string>> SplitPlan(CopilotSession session, ProjectPlan plan, CancellationToken cancellationToken)
     {
         var specsDirectory = EnsureSpecsDirectory(plan.OutputDirectory);
         var prompt = BuildSplittingPrompt(specsDirectory);
 
         await _copilotService.SendMessage(
-            new SendMessageConfig(prompt, plan.Session, [plan.PlanFilePath]), cancellationToken);
+            new SendMessageConfig(prompt, session, [plan.PlanFilePath]), cancellationToken);
 
         var specFiles = _fileSystem.Directory
             .GetFiles(specsDirectory, "*.md")

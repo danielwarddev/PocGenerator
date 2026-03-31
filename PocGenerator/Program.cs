@@ -13,15 +13,22 @@ using PocGenerator.Verification;
 using SlugGenerator = PocGenerator.Planning.SlugGenerator;
 using SpecSplitter = PocGenerator.Planning.SpecSplitter;
 
+CliArgs cliArgs;
+
+try
+{
+    cliArgs = CliArgs.Parse(args);
+}
+catch (InvalidOperationException ex)
+{
+    System.Console.Error.WriteLine(ex.Message);
+    Environment.ExitCode = 1;
+    return;
+}
+
 await Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
-        var cliArgs = Parser.Default
-            .ParseArguments<CliArgs>(args)
-            .MapResult(
-                parsed => parsed,
-                _ => new CliArgs());
-
         services.AddHostedService<ConsoleRunner>();
         services.AddSingleton<ICopilotClient, CopilotClientImpl>();
         services.AddSingleton<ICopilotService, CopilotService>();
@@ -31,12 +38,16 @@ await Host.CreateDefaultBuilder(args)
         services.AddSingleton<IIdeaFileLocator, IdeaFileLocator>();
         services.AddSingleton<IOutputDirectoryService, OutputDirectoryService>();
         services.AddSingleton<IProjectPlanner, ProjectPlanner>();
+        services.AddSingleton<IProjectPlanReconstructor, ProjectPlanReconstructor>();
         services.AddSingleton<ISpecSplitter, SpecSplitter>();
         services.AddSingleton<IPlanningPhaseHandler, PlanningPhaseHandler>();
         services.AddSingleton<ICodeGenerator, CodeGenerator>();
         services.AddSingleton(new CodeGenerator.HardCapConfig());
         services.AddSingleton<IGenerationPhaseHandler, GenerationPhaseHandler>();
         services.AddSingleton<IVerificationPhaseHandler, VerificationPhaseHandler>();
+        services.AddSingleton<INormalFlowRunner, NormalFlowRunner>();
+        services.AddSingleton<IRetryFlowRunner, RetryFlowRunner>();
+        services.AddSingleton<IRetryExecutionPlanner, RetryExecutionPlanner>();
         services.AddSingleton<IProcessRunner, ProcessRunner>();
         services.AddSingleton<IGitService, GitService>();
         services.AddSingleton(new OutputDirectoryService.ProjectScriptsConfig(

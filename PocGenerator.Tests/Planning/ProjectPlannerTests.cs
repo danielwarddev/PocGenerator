@@ -44,7 +44,7 @@ public class ProjectPlannerTests
     }
 
     [Fact]
-    public async Task When_GeneratePlan_Succeeds_Then_Returns_Plan_With_Session_And_OutputDir()
+    public async Task When_GeneratePlan_Succeeds_Then_Returns_Plan_With_OutputDir()
     {
         _fileSystem.AddDirectory("/output/2026-02-23-TestSlug");
         _outputDirectoryService.CreateOutputFolder(Arg.Any<string>(), Arg.Any<CancellationToken>())
@@ -54,7 +54,6 @@ public class ProjectPlannerTests
 
         var result = await _sut.GeneratePlan(_session, "TestSlug", new IdeaFiles("/idea/mvp.md", []), TestContext.Current.CancellationToken);
 
-        result.Session.Should().Be(_session);
         result.OutputDirectory.Should().Be("/output/2026-02-23-TestSlug");
         result.PlanFilePath.Should().Contain("2026-02-23-TestSlug").And.Contain("implementation-plan.md");
     }

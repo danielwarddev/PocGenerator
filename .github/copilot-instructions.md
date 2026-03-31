@@ -123,6 +123,6 @@ The `GitHub.Copilot.SDK` communicates via JSON-RPC with a local Copilot CLI serv
 
 The full pipeline is implemented across three phase handlers:
 
-1. **Planning** (`PlanningPhaseHandler`) — Locates `mvp-definition/mvp.md`, generates a project slug, creates an `implementation-plan.md`, and splits it into per-feature spec files in a `specs/` subdirectory.
+1. **Planning** (`PlanningPhaseHandler`) — Locates `mvp-definition/mvp.md`, generates a project slug, creates an `implementation-plan.md`, and splits it into per-feature spec files in a `Specs/` subdirectory.
 2. **Generation** (`GenerationPhaseHandler` → `CodeGenerator`) — Iterates over spec files; opens a fresh Copilot session per spec with the developing system prompt and `ProjectTools` (scaffold helpers). Includes a hard cap of 50 Copilot requests total.
 3. **Verification** (`VerificationPhaseHandler`) — Opens a session with the verification system prompt and Playwright MCP; runs `dotnet build`/`dotnet test`, exercises the UI for web apps, then generates a README in a second session.
