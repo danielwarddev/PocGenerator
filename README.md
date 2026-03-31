@@ -12,6 +12,8 @@ A .NET console app that takes an app idea and generates a runnable proof-of-conc
 
 To run, put your app description at `PocGenerator/mvp-definition/mvp.md` (with additional optional files you want it to have as context), then run `dotnet run --project PocGenerator` from the repo root.
 
+If a run fails after one of its checkpoints, you can resume it with `dotnet run --project PocGenerator -- --retry <output-folder>` instead of starting over. Use one of the timestamped folders under `PocGenerator/mvp-outputs/` as the retry path.
+
 ## Output
 
 The app will produce a new C# solution inside the `PocGenerator/mvp-outputs/mvp.md` directory. Inside that directory, aside from the project itself, you will find a few other files:
@@ -25,12 +27,33 @@ The app will produce a new C# solution inside the `PocGenerator/mvp-outputs/mvp.
 
 ## Process
 
-The app goes through 3 phases to generate an app.
+The app goes through 3 general phases to generate an app:
 
 ```mermaid
 graph LR
     A["<b>Planning</b><br/>Read mvp definition, create project slug, plan & specs"] --> B["<b>Generation</b><br/>Implement each spec one at a time"]
     B --> C["<b>Verification</b><br/>Validate user flows, generate README"]
+```
+
+Additionally, there is some retry logic if the process fails mid-generation:
+
+```mermaid
+flowchart TD
+    A["--retry flag passed with existing directory"] --> B["Read latest checkpoint from git log"]
+    B --> C{"Latest checkpoint"}
+    C -->|none| D["Stop and start a new run instead"]
+    C -->|planning| E["Discard unfinished work: git clean -fd + git checkout ."]
+    E --> F["Start generation again from the first spec"]
+    C -->|spec N| G["Discard unfinished work: git clean -fd + git checkout ."]
+    G --> H{"More specs left?"}
+    H -->|Yes| I["Start the next spec again from the beginning"]
+    H -->|No| J["Start verification again from the beginning"]
+    C -->|verification| K["Exit: already complete"]
+
+    classDef stop fill:#fdecea,stroke:#c62828,color:#7f1d1d
+    classDef resume fill:#e8f1fd,stroke:#1565c0,color:#0d47a1
+    class D,K stop
+    class F,I,J resume
 ```
 
 ### Phase 1: Planning
