@@ -16,6 +16,7 @@ public class PlanningPhaseHandler : IPlanningPhaseHandler
     private readonly ISlugGenerator _slugGenerator;
     private readonly IProjectPlanner _projectPlanner;
     private readonly ISpecSplitter _specSplitter;
+    private readonly IGitService _gitService;
     private readonly ILogger<PlanningPhaseHandler> _logger;
 
     public PlanningPhaseHandler(
@@ -25,6 +26,7 @@ public class PlanningPhaseHandler : IPlanningPhaseHandler
         ISlugGenerator slugGenerator,
         IProjectPlanner projectPlanner,
         ISpecSplitter specSplitter,
+        IGitService gitService,
         ILogger<PlanningPhaseHandler> logger)
     {
         _copilotService = copilotService;
@@ -33,6 +35,7 @@ public class PlanningPhaseHandler : IPlanningPhaseHandler
         _slugGenerator = slugGenerator;
         _projectPlanner = projectPlanner;
         _specSplitter = specSplitter;
+        _gitService = gitService;
         _logger = logger;
     }
 
@@ -55,6 +58,10 @@ public class PlanningPhaseHandler : IPlanningPhaseHandler
 
         var specFiles = await _specSplitter.SplitPlan(plan, cancellationToken);
         _logger.LogInformation("Spec splitting complete. {SpecCount} specs generated", specFiles.Count);
+
+        await _gitService.AddAll(plan.OutputDirectory, cancellationToken);
+        await _gitService.Commit("planning", plan.OutputDirectory, cancellationToken);
+        _logger.LogInformation("Planning checkpoint committed for {OutputDirectory}", plan.OutputDirectory);
 
         return plan with { SpecFiles = specFiles };
     }

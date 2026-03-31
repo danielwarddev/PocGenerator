@@ -14,17 +14,20 @@ public class VerificationPhaseHandler : IVerificationPhaseHandler
     private readonly ICopilotService _copilotService;
     private readonly ISystemPromptProvider _systemPromptProvider;
     private readonly IIdeaFileLocator _ideaFileLocator;
+    private readonly IGitService _gitService;
     private readonly ILogger<VerificationPhaseHandler> _logger;
 
     public VerificationPhaseHandler(
         ICopilotService copilotService,
         ISystemPromptProvider systemPromptProvider,
         IIdeaFileLocator ideaFileLocator,
+        IGitService gitService,
         ILogger<VerificationPhaseHandler> logger)
     {
         _copilotService = copilotService;
         _systemPromptProvider = systemPromptProvider;
         _ideaFileLocator = ideaFileLocator;
+        _gitService = gitService;
         _logger = logger;
     }
 
@@ -50,6 +53,10 @@ public class VerificationPhaseHandler : IVerificationPhaseHandler
         }
 
         _logger.LogInformation("README generation completed");
+
+        await _gitService.AddAll(outputDirectory, cancellationToken);
+        await _gitService.Commit("verification", outputDirectory, cancellationToken);
+        _logger.LogInformation("Verification checkpoint committed for {OutputDirectory}", outputDirectory);
     }
 
     private static string BuildVerificationPrompt(string outputDirectory)

@@ -13,6 +13,7 @@ public class VerificationPhaseHandlerTests
     private readonly ICopilotService _copilotService = Substitute.For<ICopilotService>();
     private readonly ISystemPromptProvider _systemPromptProvider = Substitute.For<ISystemPromptProvider>();
     private readonly IIdeaFileLocator _ideaFileLocator = Substitute.For<IIdeaFileLocator>();
+    private readonly IGitService _gitService = Substitute.For<IGitService>();
     private readonly ILogger<VerificationPhaseHandler> _logger = Substitute.For<ILogger<VerificationPhaseHandler>>();
     private readonly VerificationPhaseHandler _sut;
 
@@ -25,7 +26,7 @@ public class VerificationPhaseHandlerTests
         _systemPromptProvider.GetVerificationPrompt().Returns("test-prompt");
         _ideaFileLocator.GetIdeaFiles().Returns(new IdeaFiles("/ideas/mvp.md", []));
 
-        _sut = new VerificationPhaseHandler(_copilotService, _systemPromptProvider, _ideaFileLocator, _logger);
+        _sut = new VerificationPhaseHandler(_copilotService, _systemPromptProvider, _ideaFileLocator, _gitService, _logger);
     }
 
     [Fact]

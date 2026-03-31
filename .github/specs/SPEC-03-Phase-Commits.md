@@ -1,6 +1,6 @@
 # Spec 3: Phase Commits
 
-**Status**: 📋 Not Started
+**Status**: ✅ Complete
 
 ---
 
@@ -16,21 +16,21 @@ Building on the git repository established in SPEC-02, this spec adds automatic 
 
 ### Commit Checkpoints
 
-- [ ] After planning completes (plan + spec splitting), all changes are committed with message `planning`
-- [ ] After each spec's code generation completes, all changes are committed with message `spec <N>` (e.g., `spec 1`, `spec 2`)
-- [ ] After verification completes, all changes are committed with message `verification`
+- [x] After planning completes (plan + spec splitting), all changes are committed with message `planning`
+- [x] After each spec's code generation completes, all changes are committed with message `spec <N>` (e.g., `spec 1`, `spec 2`)
+- [x] After verification completes, all changes are committed with message `verification`
 
 ### Commit Convention
 
-- [ ] Each commit uses `git add -A` followed by `git commit -m "<message>"`
-- [ ] Commit messages are exact strings: `planning`, `spec 1` … `spec N`, `verification` (the resume logic in SPEC-04 will match these exactly from `git log --oneline`)
+- [x] Each commit uses `git add -A` followed by `git commit -m "<message>"`
+- [x] Commit messages are exact strings: `planning`, `spec 1` … `spec N`, `verification` (the resume logic in SPEC-04 will match these exactly from `git log --oneline`)
 
 ### Integration
 
-- [ ] `PlanningPhaseHandler` commits `planning` after spec splitting
-- [ ] `GenerationPhaseHandler` (or `CodeGenerator`) commits after each spec is generated
-- [ ] `VerificationPhaseHandler` commits after verification is done
-- [ ] All existing tests continue to pass
+- [x] `PlanningPhaseHandler` commits `planning` after spec splitting
+- [x] `GenerationPhaseHandler` (or `CodeGenerator`) commits after each spec is generated
+- [x] `VerificationPhaseHandler` commits after verification is done
+- [x] All existing tests continue to pass
 
 ## Out of Scope
 
@@ -44,7 +44,7 @@ Building on the git repository established in SPEC-02, this spec adds automatic 
 
 ## Definition of Done
 
-- [ ] All acceptance criteria are met
-- [ ] Unit tests verify commit calls happen at the correct points in each phase handler
-- [ ] Existing tests pass (`dotnet test PocGenerator.Tests`)
-- [ ] Build succeeds (`dotnet build PocGenerator`)
+- [x] All acceptance criteria are met
+- [x] Unit tests verify commit calls happen at the correct points in each phase handler
+- [x] Existing tests pass (`dotnet test PocGenerator.Tests`)
+- [x] Build succeeds (`dotnet build PocGenerator`)

@@ -14,10 +14,10 @@ public record GenerationResult(IReadOnlyList<SpecResult> SpecResults)
 
 public interface ICodeGenerator
 {
-    Task<GenerationResult> Generate(
+    Task<SpecResult?> Generate(
         string systemPrompt,
         string outputDirectory,
-        IReadOnlyList<string> specFiles,
+        string specFile,
         CancellationToken cancellationToken = default);
 }
 
@@ -39,40 +39,31 @@ public class CodeGenerator : ICodeGenerator
         _hardCap = config?.MaxRequests ?? 50;
     }
 
-    public async Task<GenerationResult> Generate(
+    public async Task<SpecResult?> Generate(
         string systemPrompt,
         string outputDirectory,
-        IReadOnlyList<string> specFiles,
+        string specFile,
         CancellationToken cancellationToken = default)
     {
-        var results = new List<SpecResult>();
-
-        for (var i = 0; i < specFiles.Count; i++)
+        if (_requestCount >= _hardCap)
         {
-            if (_requestCount >= _hardCap)
-            {
-                _logger.LogWarning(
-                    "Hard cap of {HardCap} requests reached after {Completed} of {Total} specs. Stopping generation",
-                    _hardCap, i, specFiles.Count);
-                break;
-            }
-
-            var specFile = specFiles[i];
-            var specName = _fileSystem.Path.GetFileNameWithoutExtension(specFile);
-            _logger.LogInformation(
-                "Implementing spec {Current} of {Total}: {SpecName}",
-                i + 1, specFiles.Count, specName);
-
-            await using var session = await _copilotService.CreateSession(new CreateSessionConfig(systemPrompt, OutputDirectory: outputDirectory), cancellationToken);
-            var prompt = BuildPrompt(outputDirectory);
-            await _copilotService.SendMessage(new SendMessageConfig(prompt, session, [specFile]), cancellationToken);
-            _requestCount++;
-
-            results.Add(new SpecResult(specFile, Success: true));
-            _logger.LogInformation("Spec {SpecName} completed successfully", specName);
+            _logger.LogWarning(
+                "Hard cap of {HardCap} requests reached before spec {SpecFile}. Stopping generation",
+                _hardCap,
+                specFile);
+            return null;
         }
 
-        return new GenerationResult(results);
+        var specName = _fileSystem.Path.GetFileNameWithoutExtension(specFile);
+        _logger.LogInformation("Implementing spec: {SpecName}", specName);
+
+        await using var session = await _copilotService.CreateSession(new CreateSessionConfig(systemPrompt, OutputDirectory: outputDirectory), cancellationToken);
+        var prompt = BuildPrompt(outputDirectory);
+        await _copilotService.SendMessage(new SendMessageConfig(prompt, session, [specFile]), cancellationToken);
+        _requestCount++;
+
+        _logger.LogInformation("Spec {SpecName} completed successfully", specName);
+        return new SpecResult(specFile, Success: true);
     }
 
     private static string BuildPrompt(string outputDirectory)

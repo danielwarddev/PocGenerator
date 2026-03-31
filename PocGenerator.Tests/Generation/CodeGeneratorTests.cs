@@ -25,36 +25,35 @@ public class CodeGeneratorTests
     }
 
     [Fact]
-    public async Task When_Specs_Provided_Then_Each_Spec_Sends_One_Message()
+    public async Task When_Spec_Provided_Then_One_Message_Is_Sent()
     {
-        var specFiles = SetupSpecFiles("spec-01-auth.md", "spec-02-dashboard.md");
+        var specFile = SetupSpecFile("spec-01-auth.md");
         SetupOutputDirectory();
 
-        await _sut.Generate("test-prompt", "/output", specFiles, TestContext.Current.CancellationToken);
+        await _sut.Generate("test-prompt", "/output", specFile, TestContext.Current.CancellationToken);
 
-        await _copilotService.Received(2).SendMessage(
+        await _copilotService.Received(1).SendMessage(
             Arg.Any<SendMessageConfig>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task When_Specs_Provided_Then_Result_Reports_All_Succeeded()
+    public async Task When_Spec_Provided_Then_Result_Reports_Success()
     {
-        var specFiles = SetupSpecFiles("spec-01-auth.md", "spec-02-dashboard.md");
+        var specFile = SetupSpecFile("spec-01-auth.md");
         SetupOutputDirectory();
 
-        var result = await _sut.Generate("test-prompt", "/output", specFiles, TestContext.Current.CancellationToken);
+        var result = await _sut.Generate("test-prompt", "/output", specFile, TestContext.Current.CancellationToken);
 
-        result.SucceededCount.Should().Be(2);
-        result.SpecResults.Should().AllSatisfy(r => r.Success.Should().BeTrue());
+        result.Should().Be(new SpecResult(specFile, Success: true));
     }
 
     [Fact]
     public async Task When_Prompt_Sent_Then_It_Contains_Output_Directory()
     {
-        var specFiles = SetupSpecFiles("spec-01-auth.md");
+        var specFile = SetupSpecFile("spec-01-auth.md");
         SetupOutputDirectory();
 
-        await _sut.Generate("test-prompt", "/output", specFiles, TestContext.Current.CancellationToken);
+        await _sut.Generate("test-prompt", "/output", specFile, TestContext.Current.CancellationToken);
 
         await _copilotService.Received().SendMessage(
             Arg.Is<SendMessageConfig>(c => c.Prompt.Contains("/output")),
@@ -64,10 +63,10 @@ public class CodeGeneratorTests
     [Fact]
     public async Task When_Spec_File_Attached_Then_Only_Spec_File_Is_Attached()
     {
-        var specFiles = SetupSpecFiles("spec-01-auth.md");
+        var specFile = SetupSpecFile("spec-01-auth.md");
         _fileSystem.AddDirectory("/output");
 
-        await _sut.Generate("test-prompt", "/output", specFiles, TestContext.Current.CancellationToken);
+        await _sut.Generate("test-prompt", "/output", specFile, TestContext.Current.CancellationToken);
 
         await _copilotService.Received().SendMessage(
             Arg.Is<SendMessageConfig>(c =>
@@ -78,11 +77,16 @@ public class CodeGeneratorTests
     }
 
     [Fact]
-    public async Task When_Empty_Spec_List_Then_No_Messages_Sent_And_Empty_Result()
+    public async Task When_Hard_Cap_Set_To_Zero_Then_No_Spec_Is_Processed()
     {
-        var result = await _sut.Generate("test-prompt", "/output", [], TestContext.Current.CancellationToken);
+        var config = new CodeGenerator.HardCapConfig(MaxRequests: 0);
+        var sut = new CodeGenerator(_copilotService, _fileSystem, _logger, config);
+        var specFile = SetupSpecFile("spec-01-auth.md");
+        SetupOutputDirectory();
 
-        result.SpecResults.Should().BeEmpty();
+        var result = await sut.Generate("test-prompt", "/output", specFile, TestContext.Current.CancellationToken);
+
+        result.Should().BeNull();
         await _copilotService.DidNotReceive().SendMessage(
             Arg.Any<SendMessageConfig>(), Arg.Any<CancellationToken>());
     }
@@ -100,49 +104,32 @@ public class CodeGeneratorTests
     public void When_HardCapConfig_Not_Provided_Then_Default_Is_50()
     {
         var generator = new CodeGenerator(_copilotService, _fileSystem, _logger);
-        // Just verify it constructs without error - default cap is 50
         generator.Should().NotBeNull();
     }
 
     [Fact]
-    public async Task When_Hard_Cap_Reached_Then_Remaining_Specs_Are_Skipped()
+    public async Task When_Hard_Cap_Reached_Then_Later_Specs_Are_Skipped_Across_Calls()
     {
-        var config = new CodeGenerator.HardCapConfig(MaxRequests: 2);
+        var config = new CodeGenerator.HardCapConfig(MaxRequests: 1);
         var sut = new CodeGenerator(_copilotService, _fileSystem, _logger, config);
-        var specFiles = SetupSpecFiles("spec-01-auth.md", "spec-02-dashboard.md", "spec-03-api.md");
+        var firstSpec = SetupSpecFile("spec-01-auth.md");
+        var secondSpec = SetupSpecFile("spec-02-dashboard.md");
         SetupOutputDirectory();
 
-        var result = await sut.Generate("test-prompt", "/output", specFiles, TestContext.Current.CancellationToken);
+        var firstResult = await sut.Generate("test-prompt", "/output", firstSpec, TestContext.Current.CancellationToken);
+        var secondResult = await sut.Generate("test-prompt", "/output", secondSpec, TestContext.Current.CancellationToken);
 
-        result.SpecResults.Should().HaveCount(2);
-        await _copilotService.Received(2).SendMessage(
+        firstResult.Should().Be(new SpecResult(firstSpec, Success: true));
+        secondResult.Should().BeNull();
+        await _copilotService.Received(1).SendMessage(
             Arg.Any<SendMessageConfig>(), Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task When_Hard_Cap_Set_To_Zero_Then_No_Specs_Are_Processed()
+    private string SetupSpecFile(string specFileName)
     {
-        var config = new CodeGenerator.HardCapConfig(MaxRequests: 0);
-        var sut = new CodeGenerator(_copilotService, _fileSystem, _logger, config);
-        var specFiles = SetupSpecFiles("spec-01-auth.md");
-        SetupOutputDirectory();
-
-        var result = await sut.Generate("test-prompt", "/output", specFiles, TestContext.Current.CancellationToken);
-
-        result.SpecResults.Should().BeEmpty();
-    }
-
-    private IReadOnlyList<string> SetupSpecFiles(params string[] specFileNames)
-    {
-        var specPaths = new List<string>();
-        foreach (var name in specFileNames)
-        {
-            var path = $"/output/Specs/{name}";
-            _fileSystem.AddFile(path, new MockFileData($"# {name}\n\nSpec content."));
-            specPaths.Add(path);
-        }
-
-        return specPaths;
+        var path = $"/output/Specs/{specFileName}";
+        _fileSystem.AddFile(path, new MockFileData($"# {specFileName}\n\nSpec content."));
+        return path;
     }
 
     private void SetupOutputDirectory()

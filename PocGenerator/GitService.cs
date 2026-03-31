@@ -26,7 +26,7 @@ public class GitService : IGitService
 
     public async Task AddAll(string workingDirectory, CancellationToken cancellationToken)
     {
-        await _processRunner.Run("git", "add .", workingDirectory, cancellationToken);
+        await _processRunner.Run("git", "add -A", workingDirectory, cancellationToken);
     }
 
     public async Task Commit(string message, string workingDirectory, CancellationToken cancellationToken)
