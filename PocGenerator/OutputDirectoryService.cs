@@ -7,6 +7,7 @@ namespace PocGenerator;
 public interface IOutputDirectoryService
 {
     Task<string> CreateOutputFolder(string slug, CancellationToken cancellationToken = default);
+    string ResolveOutputDirectory(string outputDirectoryOrName);
     void CopyProjectScripts(string outputDirectory);
     void CopyDirectoryBuildProps(string outputDirectory);
     void CopyGitignore(string outputDirectory);
@@ -63,6 +64,24 @@ public class OutputDirectoryService : IOutputDirectoryService
         _logger.LogTrace("Created solution at: {OutputDirectory}", fullPath);
 
         return fullPath;
+    }
+
+    public string ResolveOutputDirectory(string outputDirectoryOrName)
+    {
+        var isMoreThanOnlyFolderName = 
+            _fileSystem.Path.IsPathRooted(outputDirectoryOrName) || outputDirectoryOrName.Contains(_fileSystem.Path.DirectorySeparatorChar) ||
+            outputDirectoryOrName.Contains(_fileSystem.Path.AltDirectorySeparatorChar) ||
+            outputDirectoryOrName.StartsWith(".", StringComparison.Ordinal);
+
+        if (isMoreThanOnlyFolderName)
+        {
+            return _fileSystem.Path.GetFullPath(outputDirectoryOrName);
+        }
+        else
+        {
+            var outputDirectory = _fileSystem.Path.Combine(_cliArgs.OutputPath, outputDirectoryOrName);
+            return _fileSystem.Path.GetFullPath(outputDirectory);
+        }
     }
 
     public void CopyProjectScripts(string outputDirectory)

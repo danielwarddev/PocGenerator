@@ -51,6 +51,22 @@ public class OutputDirectoryServiceTests
     }
 
     [Fact]
+    public void When_ResolveOutputDirectory_Given_A_Bare_Folder_Name_Then_It_Should_Use_OutputPath()
+    {
+        var result = _sut.ResolveOutputDirectory("2026-03-31-MyApp");
+
+        result.Should().Be(_fileSystem.Path.GetFullPath("/output/2026-03-31-MyApp"));
+    }
+
+    [Fact]
+    public void When_ResolveOutputDirectory_Given_A_Path_With_Separators_Then_It_Should_Use_That_Path()
+    {
+        var result = _sut.ResolveOutputDirectory("./custom-outputs/2026-03-31-MyApp");
+
+        result.Should().Be(_fileSystem.Path.GetFullPath("./custom-outputs/2026-03-31-MyApp"));
+    }
+
+    [Fact]
     public void When_CopyProjectScripts_Called_Then_Ps1_Scripts_Are_Copied()
     {
         var outputDir = _fileSystem.Path.GetFullPath("/output/test-dir");

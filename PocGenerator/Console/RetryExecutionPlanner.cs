@@ -1,4 +1,3 @@
-using System.IO.Abstractions;
 using Microsoft.Extensions.Logging;
 using PocGenerator.Planning;
 
@@ -26,24 +25,24 @@ public class RetryExecutionPlanner : IRetryExecutionPlanner
 {
     private readonly IGitService _gitService;
     private readonly IProjectPlanReconstructor _projectPlanReconstructor;
-    private readonly IFileSystem _fileSystem;
+    private readonly IOutputDirectoryService _outputDirectoryService;
     private readonly ILogger<RetryExecutionPlanner> _logger;
 
     public RetryExecutionPlanner(
         IGitService gitService,
         IProjectPlanReconstructor projectPlanReconstructor,
-        IFileSystem fileSystem,
+        IOutputDirectoryService outputDirectoryService,
         ILogger<RetryExecutionPlanner> logger)
     {
         _gitService = gitService;
         _projectPlanReconstructor = projectPlanReconstructor;
-        _fileSystem = fileSystem;
+        _outputDirectoryService = outputDirectoryService;
         _logger = logger;
     }
 
     public async Task<RetryExecutionPlan> Create(string retryDirectory, CancellationToken cancellationToken = default)
     {
-        var outputDirectory = _fileSystem.Path.GetFullPath(retryDirectory);
+        var outputDirectory = _outputDirectoryService.ResolveOutputDirectory(retryDirectory);
         var lastCommitMessage = await _gitService.GetLog(outputDirectory, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(lastCommitMessage))

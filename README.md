@@ -14,6 +14,8 @@ To run, put your app description at `PocGenerator/mvp-definition/mvp.md` (with a
 
 If a run fails after one of its checkpoints, you can resume it with `dotnet run --project PocGenerator -- --retry <output-folder>` instead of starting over. Use one of the timestamped folders under `PocGenerator/mvp-outputs/` as the retry path.
 
+You can pass either the full path or just the folder name, eg. `--retry 2026-03-31-MyCoolApp`.
+
 ## Output
 
 The app will produce a new C# solution inside the `PocGenerator/mvp-outputs/mvp.md` directory. Inside that directory, aside from the project itself, you will find a few other files:
